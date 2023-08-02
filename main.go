@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/LENVOVO/student-statistics-app/Rihal-Project/controllers"
-	"github.com/LENVOVO/student-statistics-app/Rihal-Project/gin"
-	"github.com/LENVOVO/student-statistics-app/Rihal-Project/initializers"
+	"github.com/Userasma/Rihal-Project/controllers"
+	"github.com/Userasma/Rihal-Project/initializers"
+	"github.com/gin-gonic/gin"
 )
 
 func init() {

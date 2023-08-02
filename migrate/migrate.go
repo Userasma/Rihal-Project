@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/LENOVO/student-statistics-app/Rihal-Project/initializers"
-	"github.com/LENOVO/student-statistics-app/Rihal-Project/models"
+	"github.com/Userasma/Rihal-Project/initializers"
+	"github.com/Userasma/Rihal-Project/models"
 )
 
 func init() {
