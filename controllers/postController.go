@@ -1,91 +1,113 @@
 package controllers
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/Userasma/Rihal-Project/initializers"
 	"github.com/Userasma/Rihal-Project/models"
 	"github.com/gin-gonic/gin"
 )
 
-func Create(c *gin.Context) {
-	var main models.Main
-	if err := c.ShouldBindJSON(&main); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+func UserCreate(c *gin.Context) {
+	// Bind form data to the UserForm struct
+	var userForm UserForm
+	if err := c.ShouldBind(&userForm); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	result := initializers.DB.Create(&main)
+	// Create a new user based on the form data
+	user := models.Main{
+		FirstName:   userForm.FirstName,
+		LastName:    userForm.LastName,
+		Email:       userForm.Email,
+		DateOfBirth: userForm.DateOfBirth,
+	}
 
+	// Create the user in the database
+	result := initializers.DB.Create(&user)
 	if result.Error != nil {
-		c.JSON(400, gin.H{"error": result.Error.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"main": main,
-	})
+	// Redirect to the userList.html page
+	c.Redirect(http.StatusSeeOther, "/users/list")
 }
 
-func Index(c *gin.Context) {
-	var mains []models.Main
-	initializers.DB.Find(&mains)
+// Function to calculate age based on the date of birth
+func CalculateAge(dateOfBirth time.Time) int {
+	now := time.Now()
+	age := now.Year() - dateOfBirth.Year()
 
-	c.JSON(200, gin.H{
-		"mains": mains,
-	})
+	//If the current day of the year is less than the user's day of the year,
+	//  we decrement the age.
+	if now.YearDay() < dateOfBirth.YearDay() {
+		age--
+	}
+
+	return age
 }
 
-func Show(c *gin.Context) {
+func GetUsers() []models.Main {
+	// Retrieve the users from the database
+	var users []models.Main
+	initializers.DB.Find(&users)
+	return users
+}
+
+func GetUserByID(userID string) *models.Main {
+	// Retrieve the user from the database based on the provided ID
+	var user models.Main
+	if err := initializers.DB.First(&user, userID).Error; err != nil {
+		// Handle the error if the user is not found or any other database error occurs
+		return nil
+	}
+	return &user
+}
+
+func UserUpdate(c *gin.Context) {
+	//get id of url
+	ID := c.Param("id")
+	// get the user by the given id from the url
+	user := GetUserByID(ID)
+	if user == nil {
+		// Handle the case where the user is not found
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Parse and bind the form data to the UserUpdateForm struct
+	var form UserUpdateForm
+	if err := c.ShouldBind(&form); err != nil {
+		// Handle the error if form data validation fails
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update the user with the new details
+	user.FirstName = form.FirstName
+	user.LastName = form.LastName
+	user.Email = form.Email
+	user.DateOfBirth = form.DateOfBirth
+
+	// Save the updated user to the database
+	if err := initializers.DB.Save(user).Error; err != nil {
+		// Handle the error if the user update fails
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update user"})
+		return
+	}
+
+	// Redirect to the user details page
+	c.Redirect(http.StatusSeeOther, "/users/list")
+}
+
+func UserDelete(c *gin.Context) {
+	// get id off url
 	id := c.Param("id")
-
-	var main models.Main
-	result := initializers.DB.First(&main, id)
-
-	if result.Error != nil {
-		c.JSON(404, gin.H{"error": "Record not found"})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"main": main,
-	})
-}
-
-func Update(c *gin.Context) {
-	id := c.Param("id")
-
-	var main models.Main
-	result := initializers.DB.First(&main, id)
-
-	if result.Error != nil {
-		c.JSON(404, gin.H{"error": "Record not found"})
-		return
-	}
-
-	var updatedMain models.Main
-	if err := c.ShouldBindJSON(&updatedMain); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	initializers.DB.Model(&main).Updates(updatedMain)
-
-	c.JSON(200, gin.H{
-		"main": main,
-	})
-}
-
-func Delete(c *gin.Context) {
-	id := c.Param("id")
-
-	var main models.Main
-	result := initializers.DB.First(&main, id)
-
-	if result.Error != nil {
-		c.JSON(404, gin.H{"error": "Record not found"})
-		return
-	}
-
-	initializers.DB.Delete(&main)
-
-	c.Status(200)
+	// Delete the posts
+	initializers.DB.Delete(&models.Main{}, id)
+	// respond
+	c.Redirect(http.StatusFound, "/users/list")
 }
