@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	//"net/http"
 	"net/http"
 	"time"
 
@@ -10,9 +11,9 @@ import (
 )
 
 func UserCreate(c *gin.Context) {
-	// Bind form data to the UserForm struct
+	// Bind JSON data to the UserForm struct
 	var userForm UserForm
-	if err := c.ShouldBind(&userForm); err != nil {
+	if err := c.ShouldBindJSON(&userForm); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -32,8 +33,8 @@ func UserCreate(c *gin.Context) {
 		return
 	}
 
-	// Redirect to the userList.html page
-	c.Redirect(http.StatusSeeOther, "/users/list")
+	// Send a success response
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
 // Function to calculate age based on the date of birth
@@ -100,7 +101,7 @@ func UserUpdate(c *gin.Context) {
 	}
 
 	// Redirect to the user details page
-	c.Redirect(http.StatusSeeOther, "/users/list")
+	//c.Redirect(http.StatusSeeOther, "/users/list")
 }
 
 func UserDelete(c *gin.Context) {
@@ -109,5 +110,5 @@ func UserDelete(c *gin.Context) {
 	// Delete the posts
 	initializers.DB.Delete(&models.Main{}, id)
 	// respond
-	c.Redirect(http.StatusFound, "/users/list")
+	//c.Redirect(http.StatusFound, "/users/list")
 }
