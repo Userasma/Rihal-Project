@@ -12,6 +12,6 @@ func init() {
 }
 
 func main() {
-	initializers.DB.AutoMigrate(&models.POST{})
+	initializers.DB.AutoMigrate(&models.Main{})
 
 }
